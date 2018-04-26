@@ -1,29 +1,20 @@
 ### Inroduction ###
 
-We want to build a classifier that can identify persons of interest in
-the Enron scandal [\[enronWiki\]][&enronWiki] from the confidential
-company data that was made available to public due to Federal
-investigation. All data and code is available for
-download from the git repository [\[gitRepo\]][&gitRepo].
-
-A critical part of machine learning is making sense of your analysis
-process, and communicating it to others.  The questions below will
-help us understand your decision-making process and allow us to give
-feedback on your project.  Please answer each question; your answers
-should be 1-2 paragraphs per question.  If you find yourself writing
-much more than that, take a step back and see if you can simplify your
-response!
+We want to build a classifier that can identify persons of interest in the Enron scandal [\[enronWiki\]][&enronWiki] from the confidential company data that was made available to public due to Federal investigation. All data and code is available for download from the git repository [\[gitRepo\]][&gitRepo].
 
 ### Data ###
 
-We use the text data from the Enron corpus
+We use the text data from the 
+
+* Enron corpus
 [\[enronCorpus\]][&enronCorpus], a publicly available data set of
 email messages sent or received by 150 senior managers of the Enron
-Corporation, and detailed financial data for top executives. The Enron
-trial has been widely covered by news paper articles
+Corporation, and 
+* detailed financial data for top executives. 
+
+The Enron trial has been widely covered by news paper articles
 [\[enronUsaToday\]][&enronUsaToday] and other news sources
-[\[enronScore\]][&enronScore] [\[enronPBS\]][&enronPBS] that indicate
-a long list of people who
+[\[enronScore\]][&enronScore] [\[enronPBS\]][&enronPBS] that indicate a long list of people who
 	
 * were indicted (14 from Enron, 4 from Merril Lynch)
 * settled without admitting guilt (total 5, 2 from Enron), or</li>
@@ -35,19 +26,16 @@ financial data was given to us in pickle data format as a starting
 point of our detective work.
 
 After loading the pickle data into a Python dictionary, and early
-exploration of the data reveals (code available in poi_id.py)
+exploration of the data reveals (code available in poi_id.py) 
 
-* Enron data set includes 146 people
+* data available for 146 people
 * 21 features are collected on each person
-* only 18 people in the data set are marked as POIs
+* 18 people in the data set are marked as POIs
 
-The data set only has 146 examples, and contains only 18 out of 30 or
-so POIs. Although fairly small, the data set contains several missing
-entries that are denoted as 'NaN'.
+The data set has relatively few examples, only 146, and contains only 18 out of 30 or so POIs. Although fairly small, the data set contains several missing entries that are denoted as 'NaN'.
 
 We wanted to check if POIs have fewer or more NaNs. So for each
-feature, we compared the percentage of missing entries among POIs and
-non-POIs and looked for any difference over 30%. The following
+feature, we compared the percentage of missing entries among POIs and non-POIs and looked for any difference over 30%. The following
 features showed a large difference in percentage of missing entries
 	
 * expenses (POIs all known, non-POIs 40% unknown)
@@ -57,20 +45,13 @@ features showed a large difference in percentage of missing entries
 * salary (POIs 5.55% unknown, non-POIs 15% unknown)
 * bonus (POIs 11% unknown, non-POIs 48% unknown)
 
-It is not surprising that more financial information is available on
-the 18 POIs than on the 128 non POIs. However, we should be careful
-about using features that have a large percentage of unknown entries.
+It is not surprising that more financial information is available on the 18 POIs than on the 128 non POIs. However, we should be careful about using features that have a large percentage of unknown entries.
 
 Besides emails, we also want to explore the amount of money people
 were making. A scatter plot of salaries and bonuses, shown below,
 indicates an outlier. A closer look at the financial document table
 reveals that the outlier data point comes from a row called "TOTAL"
-which, instead of representing a real person, simply adds up all other
-examples. Such an outlier should clearly be ignored. After dropping
-this example from the data, we can still see some outliers that
-correspond to extraorniary income by some individuals (eg. Ken Lay and
-Jack Skilling). Insread of rejecting, we need pay closer attention to
-these outliers for clues to POI patterns.
+which, instead of representing a real person, simply adds up all other examples. Such an outlier should clearly be ignored. After dropping this example from the data, we can still see some outliers that correspond to extraorniary income by some individuals (eg. Ken Lay and Jack Skilling). Insread of rejecting, we need pay closer attention to these outliers for clues to POI patterns.
 
 <img class="displayed" src="plots/enron_salary_outlier.png" width="600px" height="auto">
 
@@ -80,39 +61,23 @@ Instead of creating a POI identifier using all 21 features of the original data 
 
 * select certain features
 * create some new features, and to
-* properl scaled the features.
+* properly scaled the features.
 
 This section describes the feature selection process.
 
-Even though we don't really know what causes a person to be a POI or
-not, Enron's tale of corporate greed is widely known. Hence we can
-intuitively include the key features associated with financial gain;
-e.g. salary, bonus, and exercised\_stock\_options. This intuition has
-also been validated during our outlier investigation, where we noted
-that people with extremely high salary and exercised\_stock\_options are
-often POIs. However for feature selction, we would like to follow an
-exhaustive, robust and scientific methodology devoid of any room for
-intuition. In particular, we want to arrive at the simplest, but no
+Even though we don't really know what causes a person to be a POI or not, Enron's tale of corporate greed is widely known. Hence we can intuitively include the key features associated with financial gain; e.g. salary, bonus, and exercised\_stock\_options. This intuition has also been validated during our outlier investigation, where we noted that people with extremely high salary and exercised\_stock\_options are often POIs. However for feature selction, we would like to follow an exhaustive, robust and scientific methodology devoid of any room for intuition. In particular, we want to arrive at the simplest, but no
 simpler, set of features as follows:
 	
 1. add new features to expose hidden patterns (make it no simpler)
-2. select the best features by getting rid of stuff that does not help
-	  (make it as simple as possible)
+2. select the best features by getting rid of stuff that does not help (make it as simple as possible)
 
 We start by adding new features to draw out as many patterns in the
 data as possible. From scatter plots we can see that often POIs
-themselves are the senders (resp. recipients) of the largest number of
-emails to (resp. from) other POIs. The only exception is Enron's
+themselves are the senders (resp. recipients) of the largest number of emails to (resp. from) other POIs. The only exception is Enron's
 previous CEO, LAVORATO JOHN J, who recieved the largest number of
 emails from POIs, but himself is not a POI. Therefore we add a new
 feature called "with\_poi" which adds the two features
-"from\_poi\_to\_this\_person", and "from\_this\_person\_to\_poi". This
-combined feature, which is expected to give a stronger discriminating
-power, improves the precision and recall metrics of the Decison Tree
-and the AdaBoost classifiers, even though it does not improve the
-performance of the KNN classifier that we eventually selected. Here is
-a table showing the effect of the new "with\_poi" feature on the
-precision and recall metrics of several different classifiers.
+"from\_poi\_to\_this\_person", and "from\_this\_person\_to\_poi". This combined feature, which is expected to give a stronger discriminating power, improves the precision and recall metrics of the Decison Tree and the AdaBoost classifiers, even though it does not improve the performance of the KNN classifier that we eventually selected. Here is a table showing the effect of the new "with\_poi" feature on the precision and recall metrics of several different classifiers.
 
 
   <table class="answer">
@@ -166,8 +131,8 @@ precision and recall metrics of several different classifiers.
 
 After adding "with\_poi", and removing a text feature called
 "email_address", we end up with effectively 20 features. How do we
-know which features indicate a "poi" ? We start with measuring the
-importance each individual feature with the Decision Tree
+know which features indicate a "poi" ? We start by measuring the
+importance of each individual feature with the Decision Tree
 classifier. In this context, the importance of a feature defined as
 the reduction of the impurity criterion brought by that
 feature. Features with higher importance are likely to have higher
@@ -261,20 +226,7 @@ discriminating power. This is shown in the following table.
   </table>
 
 
-In the next step we select the minimum set of features that give the
-most power in classifying. Of multiple feature selection techniques
-available out there, we chose univariate feature selection, which
-selects the best features based on the ANOVA F-value of the
-samples. The SelectKBest utility from Sklearn was used for different
-values of k, and the selected set of features were tested with two
-different classifiers, KNN and Decision Tree. Before using the KNN
-classifier, we used the Minmax scaler to scale the features. The results from each of these classifiers also depend
-on the parameter tunes: we used the default KNeighborsClassifier()
-classifier from sklearn, and a hand-tuned Decision Tree classifier
-with parameters min\_samples\_split=5, min\_samples\_leaf=2. The results are summarized in the following table. We also handpicked a set of
-features based on intuition and brute search, which is reported at the
-last row of the table. For each classifier, the best combination of
-precision and recall values is highlighted. 
+Next we select the minimum set of features that give the most power in classifying. Of multiple feature selection techniques available out there, we choose univariate feature selection, which selects the best features based on the ANOVA F-value of the samples. The SelectKBest utility from Sklearn was used for different values of k, and the selected set of features were tested with two different classifiers, KNN and Decision Tree. Before using the KNN classifier, we used the Minmax scaler to scale the features. The results from each of these classifiers also depend on the parameter tunes: we used the default KNeighborsClassifier() classifier from sklearn, and a hand-tuned Decision Tree classifier with parameters min\_samples\_split=5, min\_samples\_leaf=2. The results are summarized in the following table. We also handpicked a set of features based on intuition and brute search, which is reported at the last row of the table. For each classifier, the best combination of precision and recall values is highlighted. 
 
   <table class="answer">
     <tr>
@@ -423,26 +375,14 @@ precision and recall values is highlighted.
 
 For the kNN classifiers, SelectKBest with K=3 produced the best F1
 score (which is the harmonic mean of precision and recall). These 3
-features are: 'bonus', 'total\_stock\_value', and
-'exercised\_stock\_options'. However, for the hand-tuned Decision Tree
-classifier, the manually selected featuers 'salary', 'bonus',
+features are: 'bonus', 'total\_stock\_value', and 'exercised\_stock\_options'. However, for the hand-tuned Decision Tree classifier, the manually selected featuers 'salary', 'bonus',
 'exercised\_stock\_options', and 'with\_poi', outperformed the best
 features selected by the SelectKBest utility.
 
 As observed above, feature selection schemes perform differently on
-different classifiers. Even on the same classifier, the performance of
-a scheme may vary with different parameter tunings. Additionally a
-different feature selection utility, e.g. Chi-square, or Recursive
-Feature Elimination (RFE) may also lead to a different set of features
-getting selected. In the interest of time these experiments are left
-as future work.
+different classifiers. Even on the same classifier, the performance of a scheme may vary with different parameter tunings. Additionally a different feature selection utility, e.g. Chi-square, or Recursive Feature Elimination (RFE) may also lead to a different set of features getting selected. In the interest of time these experiments are left as future work.
 
-Feature scaling is an important aspect of certain classification
-algorithms that trade off one feature against another. As discussed in the next section, we found that the K-Nearest-Neighbor classifier gave
-the best precision and recall numbers. KNN's Euclidean distance metric
-is affected by feature scaling. So we performed MinMax scaling before
-fitting the KNN classifier. This makes a noticeable difference in
-KNN's performance numbers.
+Feature scaling is an important aspect of certain classification algorithms that trade off one feature against another. As discussed in the next section, we found that the K-Nearest-Neighbor classifier gave the best precision and recall numbers. KNN's Euclidean distance metric is affected by feature scaling. So we performed MinMax scaling before fitting the KNN classifier. This makes a noticeable difference in KNN's performance numbers.
 
 
 ### Algorithm ###
@@ -452,11 +392,7 @@ Now we discuss the process of picking an algorithm: which algorithms were tried,
 The K-Nearest Neighbors (KNN) classifier outperformed all other
 classifiers by a wide margin. It achieved a precision of 0.72 which is almost twice as good as any other classifier that we attempted.
 	
-The second best performer was the Decision-Tree
-classifier. Performance number of both the classifiers are given in
-the following table. The new feature "with\_poi", described above,
-helped improve the precision and recall scores of the Decision Tree
-classifier.
+The second best performer was the Decision-Tree classifier. Performance number of both the classifiers are given in the following table. The new feature "with\_poi", described above, helped improve the precision and recall scores of the Decision Tree classifier.
 
 Several other classifiers, including NaiveBayes, AdaBoost,
 and RandomForest, were also attempted.
@@ -521,18 +457,7 @@ performance, as described in the next section.
 
 ### Parameter Tuning ###
 
-What does it mean to tune the parameters of an algorithm, and what can
-happen if you don’t do this well?  How did you tune the parameters of
-your particular algorithm?  (Some algorithms don’t have parameters
-that you need to tune--if this is the case for the one you picked,
-identify and briefly explain how you would have done it if you used,
-say, a decision tree classifier). [relevant rubric item: “tune the
-algorithm”]
-
-Parameters are arguments passed when creating a classifier, and before fitting. Parameters can make a huge difference in the decision
-boundary that the classification algorithm arrives at. Sometimes
-parameter tuning can cause overfitting, and chosing the right
-parameters while avoiding overfitting is an art.
+Parameters are arguments passed when creating a classifier, and before fitting. Parameters can make a huge difference in the decision boundary that the classification algorithm arrives at. Sometimes parameter tuning can cause overfitting, and chosing the right parameters while avoiding overfitting is an art.
 
 GridSearchCV was used to systematically tune the parameters of the
 two best-performing classifiers KNN, and Decision Tree. These
@@ -612,44 +537,23 @@ Validation gives an estimate of performance on an independent data
 set. Validation provides counter balance to over fitting. Without
 validation, it is hard to know when to stop tuning the classifier over training data.
 
-It is common practice to split data into training and test sets, and
-to use test data for validation. This presents a dilemma because
-setting aside test data can adversely affect the extent of training of the classifier. Splitting the limited amount of data that we have
-available on only 146 Enron employees, would make it hard to train and test any classifier. Hence we an alternative technique called cross validation to use the limited amount of data for both training and testing.
+It is common practice to split data into training and test sets, and to use test data for validation. This presents a dilemma because setting aside test data can adversely affect the extent of training of the classifier. Splitting the limited amount of data that we have available on only 146 Enron employees, would make it hard to train and test any classifier. Hence we an alternative technique called cross validation to use the limited amount of data for both training and testing.
 
 A particular type of cross-validation method called
 StratifiedShuffleSplit was used instead of simpler cross-validation
-method such as TrainTestSplit.  StratifiedShuffleSplit creates random
-training and test sets multiple times and averages the results over
-all the tests.
+method such as TrainTestSplit.  StratifiedShuffleSplit creates random training and test sets multiple times and averages the results over all the tests.
 
 
-The class distribution of the POIs and non-POIs are heavily skewed at
-18 to 128. In such cases, StratifidShuffleSplit tries to maintain the
-same non-POI:POI ratio in all training and test sets that it creates
-from the larger data set. Instead of accuracy scores, we used
-precision, recall, and F1 scores to mitigate the effect of skewed
-distribution of POIs and non-POIs and validate the results.
+The class distribution of the POIs and non-POIs are heavily skewed at 18 to 128. In such cases, StratifidShuffleSplit tries to maintain the same non-POI:POI ratio in all training and test sets that it creates from the larger data set. Instead of accuracy scores, we used precision, recall, and F1 scores to mitigate the effect of skewed distribution of POIs and non-POIs and validate the results.
 
 
 ### Metrics ###
 
-Give at least 2 evaluation metrics, and your average performance for
-each of them.  Explain an interpretation of your metrics that says
-something human-understandable about your algorithm’s
-performance. [relevant rubric item: “usage of evaluation metrics”]
-
 The KNN classifier with parameters p=1, n_neighbors=5, leaf_size=30
-achieved a precision score of 0.868, a recall score of 0.362, and an
-F1-score (harmonic mean of precision and recall) of 0.511. It also
-achieves an accuracy score of 0.89, even though accuracy score is not
-an ideal metric in this case.
+achieved a precision score of 0.868, a recall score of 0.362, and an F1-score (harmonic mean of precision and recall) of 0.511. It also achieves an accuracy score of 0.89, even though accuracy score is not an ideal metric in this case.
 
 The precision score of 0.868 implies that once the classifier has
-called out an employee POI, there is 87% chance that the employee is
-really a POI. On the other hand, a recall score of 0.362 implies that
-give an actual POI, there is 36% chance that the classifier will be
-able to call him out.
+called out an employee POI, there is 87% chance that the employee is really a POI. On the other hand, a recall score of 0.362 implies that give an actual POI, there is 36% chance that the classifier will be able to call him out.
 
 ### References ###
 
